@@ -1,0 +1,48 @@
+<div class="flex justify-between items-center">
+  <div class="flex items-center gap-3">
+    <img src="/light-logo.png" alt="" class="w-6" />
+    <h1 class="text-xl">DocumentManager</h1>
+  </div>
+  <div class="flex items-center gap-6">
+    <i class="pi pi-bell"></i>
+    <div class="border-l h-10 border-zinc-400"></div>
+    <div class="flex items-center gap-3 cursor-pointer" (click)="menu.toggle($event)">
+      <p-avatar
+        [label]="
+          !currentUser.profileImageUrl
+            ? (currentUser.first_name.charAt(0) || '') +
+              (currentUser.last_name.charAt(0) || '')
+            : undefined
+        "
+        [image]="currentUser.profileImageUrl"
+        size="normal"
+        shape="circle"
+      />
+      <ul>
+        <li>{{ currentUser.first_name + " " + currentUser.last_name }}</li>
+        <li class="font-light">{{ currentUser.role_name }}</li>
+      </ul>
+      <i class="pi pi-angle-down"></i>
+    </div>
+  </div>
+</div>
+<p-menu
+  #menu
+  [model]="items"
+  [popup]="true"
+  class="flex justify-center"
+  styleClass="w-full md:w-50"
+>
+  <ng-template #start>
+    <span class="inline-flex items-center gap-3 px-2 py-2">
+      <img src="/light-logo.png" alt="" class="w-6" />
+      <span class="text-xl font-semibold">Document</span>
+    </span>
+  </ng-template>
+  <ng-template #item let-item>
+    <a pRipple class="flex items-center p-menu-item-link" [routerLink]="item.routerLink" (click)="item.command && item.command()">
+      <span [class]="item.icon"></span>
+      <span class="ml-2">{{ item.label }}</span>
+    </a>
+  </ng-template>
+</p-menu>

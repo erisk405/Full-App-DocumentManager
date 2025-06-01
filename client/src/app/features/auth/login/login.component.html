@@ -1,0 +1,100 @@
+<div class="grid grid-cols-2 h-screen">
+  <div>
+    <img
+      class="object-cover w-full h-full"
+      src="/banner-login.jpg"
+      alt="banner-login"
+    />
+  </div>
+  <div class="p-5 flex flex-col justify-center items-center">
+    <div class="flex items-center gap-2 flex-col">
+      <img src="/light-logo.png" alt="logo" class="w-30" />
+      <h1 class="text-2xl">Your company</h1>
+    </div>
+    <form
+      [formGroup]="loginForm"
+      (ngSubmit)="login()"
+      class="w-full max-w-xl grid grid-cols-1 gap-5"
+    >
+      <div class="flex flex-col justify-center gap-3">
+        <div class="flex flex-col gap-2">
+          <label for="username">Username</label>
+          <input
+            pInputText
+            id="username"
+            aria-describedby="username-help"
+            formControlName="username"
+            placeholder="Username"
+            class="shadow-sm transition-all border rounded-lg pl-3 h-10 border-zinc-300 hover:border-zinc-400 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-800"
+          />
+          <small id="username-help"
+            >Enter your username to reset your password.</small
+          >
+        </div>
+        <div class="flex flex-col gap-2">
+          <label for="password">Password</label>
+          <input
+            pInputText
+            type="password"
+            id="password"
+            aria-describedby="password-help"
+            formControlName="password"
+            placeholder="Password"
+            class="shadow-sm transition-all border rounded-lg pl-3 h-10 border-zinc-300 hover:border-zinc-400 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-800"
+          />
+          <small id="password-help"
+            >Enter your username to reset your password.</small
+          >
+        </div>
+      </div>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <p-checkbox formControlName="checked" [binary]="true" id="checked" />
+          <label for="checked" class="ml-2">Remember me</label>
+        </div>
+        <a href="#">Reset password</a>
+      </div>
+
+      <p-button
+        [label]="isLoading ? 'Loading...' : 'Login'"
+        [icon]="isLoading ? 'pi pi-spinner animate-spin' : undefined"
+        type="submit"
+      />
+      <p>
+        Don't have an account? <a href="/register"><strong>Register</strong></a>
+      </p>
+      <p *ngIf="error" style="color: red">{{ error }}</p>
+      <div class="relative">
+        <hr class="border-zinc-300" />
+        <span
+          class="absolute -top-full left-1/2 -translate-y-1/2 -translate-x-1/2 bg-gray-950 p-2"
+          >or</span
+        >
+      </div>
+
+      <p-button
+        severity="secondary"
+        label="Continue with Google"
+        icon="pi pi-google"
+      />
+
+      <p-button
+        severity="secondary"
+        label="Continue with Github"
+        icon="pi pi-github"
+      />
+    </form>
+  </div>
+</div>
+
+<!-- <p-floatlabel>
+  <input
+    pInputText
+    type="password"
+    name="password"
+    [(ngModel)]="password"
+    required
+    class="border rounded-lg pl-3 h-10 border-zinc-300 focus:outline-none focus:border-zinc-700"
+  />
+  <label for="password">Password</label>
+</p-floatlabel> -->

@@ -1,0 +1,45 @@
+<div class="w-70 h-screen fixed font-light">
+  <nav class="grid grid-cols-1 gap-3">
+    <div class="flex items-center gap-3">
+      <p-avatar
+        [label]="
+          !currentUser.profileImageUrl
+            ? (currentUser.first_name.charAt(0) || '') +
+              (currentUser.last_name.charAt(0) || '')
+            : undefined
+        "
+        [image]="currentUser.profileImageUrl"
+        size="normal"
+        shape="circle"
+      />
+      <ul>
+        <li>{{ currentUser.first_name + " " + currentUser.last_name }}</li>
+        <li class="text-sm text-gray-400">{{ currentUser.role_name }}</li>
+      </ul>
+    </div>
+    <ul>
+      <li *ngFor="let menu of menuItems">
+        <a
+          [routerLink]="menu.path"
+          routerLinkActive="text-blue-500 border-r-4 border-blue-500"
+          class="pl-6 py-3 hover:bg-gray-800 hover:text-blue-500 flex items-center gap-3"
+        >
+          <i [class]="menu.icon" class="text-lg"></i>
+          {{ menu.label }}
+        </a>
+      </li>
+    </ul>
+    <ul>
+      <li *ngFor="let menu of menuItems2">
+        <a
+          [routerLink]="menu.path"
+          routerLinkActive="text-blue-500 border-r-4 border-blue-500"
+          class="pl-6 py-3 hover:bg-gray-800 hover:text-blue-500 flex items-center gap-3"
+        >
+          <i [class]="menu.icon" class="text-lg"></i>
+          {{ menu.label }}
+        </a>
+      </li>
+    </ul>
+  </nav>
+</div>

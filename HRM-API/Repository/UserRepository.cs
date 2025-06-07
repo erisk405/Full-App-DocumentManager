@@ -1,6 +1,7 @@
 ﻿using HRM_API.Data;
 using HRM_API.DTOs;
 using HRM_API.Model;
+using HRM_API.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,8 +25,6 @@ namespace HRM_API.Repository
             string? orderBy = null,
             string? orderDirection = null)
         {
-            var baseUrl = $"{_httpContextAccessor.HttpContext?.Request.Scheme}://{_httpContextAccessor.HttpContext?.Request.Host}";
-
             // Start with base query
             var query = db.Users
                 .Include(u => u.Role)
@@ -100,8 +99,8 @@ namespace HRM_API.Repository
                     }
                     : null,
                 CreateAt = u.CreateAt,
-                ProfileImageUrl = u.Image != null && !string.IsNullOrEmpty(u.Image.ProfileImagePath)
-                    ? $"{baseUrl}{u.Image.ProfileImagePath}"
+                ProfileImageUrl = u.Image != null && !string.IsNullOrEmpty(u.Image.ImageUrl)
+                    ? u.Image.ImageUrl
                     : string.Empty
             }).ToListAsync();
 
@@ -168,8 +167,8 @@ namespace HRM_API.Repository
                         }
                         : null,
                     CreateAt = u.CreateAt,
-                    ProfileImageUrl = u.Image != null && !string.IsNullOrEmpty(u.Image.ProfileImagePath)
-                        ? $"{baseUrl}{u.Image.ProfileImagePath}"
+                    ProfileImageUrl = u.Image != null && !string.IsNullOrEmpty(u.Image.ImageUrl)
+                        ? u.Image.ImageUrl
                         : string.Empty
                 })
                 .FirstOrDefaultAsync();

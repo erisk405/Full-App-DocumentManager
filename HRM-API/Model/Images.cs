@@ -10,14 +10,14 @@ namespace HRM_API.Model
         [Key]
         public string ImageId { get; set; } = Guid.NewGuid().ToString();
 
-        public string? ProfileImagePath { get; set; }
+        public string? PublicId { get; set; }             // ใช้สำหรับลบรูป
+        public string? ImageUrl { get; set; }             // URL จาก Cloudinary
+        public string? FileName { get; set; }             // ชื่อไฟล์เดิม (optional)
+        public DateTime? UploadedAt { get; set; }         // วันเวลาที่อัปโหลด
 
-        public string? ProfileImageFileName { get; set; }
-
-        public DateTime? ProfileImageUploadedAt { get; set; }
-
-        // เชื่อมกลับไปยัง User (One-to-One)
+        // ความสัมพันธ์กับ User
         [JsonIgnore]
         public User? User { get; set; }
     }
+
 }

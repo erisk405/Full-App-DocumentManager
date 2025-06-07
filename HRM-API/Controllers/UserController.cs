@@ -3,6 +3,7 @@ using System.Security.Claims;
 using HRM_API.DTOs;
 using HRM_API.Model;
 using HRM_API.Repository;
+using HRM_API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,11 +17,13 @@ namespace HRM_API.Controllers
         private readonly UserRepository userRepository;
         private readonly ImageRepository imageRepository;
         private readonly IWebHostEnvironment webHostEnvironment;
-        public UserController(UserRepository userRepository,ImageRepository imageRepository, IWebHostEnvironment webHostEnvironment)
+        private readonly CloudinaryService _cloudinaryService;
+        public UserController(UserRepository userRepository,ImageRepository imageRepository, IWebHostEnvironment webHostEnvironment, CloudinaryService cloudinaryService)
         {
             this.userRepository = userRepository;
             this.imageRepository = imageRepository;
             this.webHostEnvironment = webHostEnvironment;
+            this._cloudinaryService = cloudinaryService;
         }
 
         [HttpGet]
@@ -44,13 +47,6 @@ namespace HRM_API.Controllers
 
             return Ok(response);
         }
-
-        //[HttpGet]
-        //public async Task<ActionResult> UserList()
-        //{
-        //    var allUsers = await userRepository.GetAllUsers();
-        //    return Ok(allUsers);
-        //}
 
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetById(string id)
@@ -81,7 +77,7 @@ namespace HRM_API.Controllers
             return Ok(user);
         }
 
-        [Authorize]
+        //[Authorize]
         [HttpPost]
         public async Task<ActionResult> AddUser([FromForm] UserCreateDTO userDTO)
         {
@@ -107,30 +103,23 @@ namespace HRM_API.Controllers
                 };
                 if (userDTO.ProfileImage != null && userDTO.ProfileImage.Length > 0)
                 {
-                    var uploadFolder = Path.Combine(webHostEnvironment.WebRootPath, "profiles");
-                    Directory.CreateDirectory(uploadFolder);
-
-                    var extension = Path.GetExtension(userDTO.ProfileImage.FileName);
-                    var newFilename = $"{userDTO.Username}_{Guid.NewGuid()}{extension}";
-                    var filePath = Path.Combine(uploadFolder, newFilename);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await userDTO.ProfileImage.CopyToAsync(stream);
-                    }
-
-                    var relativePath = $"/profiles/{newFilename}";
+                    // อัปโหลดขึ้น Cloudinary
+                    var result = await _cloudinaryService.UploadImageAsync(userDTO.ProfileImage, "profiles");
 
                     var image = new Images
                     {
                         ImageId = Guid.NewGuid().ToString(),
-                        ProfileImagePath = relativePath,
-                        ProfileImageFileName = userDTO.ProfileImage.FileName,
-                        ProfileImageUploadedAt = DateTime.UtcNow
+                        PublicId = result.PublicId,
+                        ImageUrl = result.SecureUrl,
+                        FileName = userDTO.ProfileImage.FileName,
+                        UploadedAt = DateTime.UtcNow
                     };
 
-                    user.Image = image; // 👈 เชื่อมกับ user
+                    user.Image = image;
                 }
+
+
+
 
                 await userRepository.Add(user);
                 return Ok(new
@@ -141,7 +130,7 @@ namespace HRM_API.Controllers
                         user.UserId,
                         user.Username,
                         user.Email,
-                        ImagePath = user.Image?.ProfileImagePath
+                        ImageUrl = user.Image?.ImageUrl
                     }
                 });
 
@@ -157,71 +146,63 @@ namespace HRM_API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(string id, [FromForm] UserUpdateDTO dto)
         {
-            var user = await userRepository.GetUserImage(id);
-            if (user == null)
+            try // ✨ เพิ่ม try-catch block
             {
-                return NotFound("User not found.");
-            }
-            // อัปเดตข้อมูลทั่วไป
-            user.First_name = dto.First_name;
-            user.Last_name = dto.Last_name;
-            user.Email = dto.Email;
-            user.Phone = dto.Phone;
-            user.Username = dto.Username;
-            user.RoleId = dto.RoleId;
-
-            // ถ้ามีการส่งรูปมาใหม่
-            if (dto.ProfileImage != null && dto.ProfileImage.Length > 0)
-            {
-                var uploadFolder = Path.Combine(webHostEnvironment.WebRootPath, "profiles");
-                Directory.CreateDirectory(uploadFolder);
-
-                // 🔥 ลบรูปเก่า
-                if (user.Image != null && !string.IsNullOrEmpty(user.Image.ProfileImagePath))
+                var user = await userRepository.GetUserImage(id);
+                if (user == null)
                 {
-                    var oldFilePath = Path.Combine(webHostEnvironment.WebRootPath, user.Image.ProfileImagePath.TrimStart('/'));
-                    if (System.IO.File.Exists(oldFilePath))
+                    return NotFound("User not found.");
+                }
+                // อัปเดตข้อมูลทั่วไป
+                user.First_name = dto.First_name;
+                user.Last_name = dto.Last_name;
+                user.Email = dto.Email;
+                user.Phone = dto.Phone;
+                user.Username = dto.Username;
+                user.RoleId = dto.RoleId;
+
+                // ถ้ามีการส่งรูปมาใหม่
+                if (dto.ProfileImage != null && dto.ProfileImage.Length > 0)
+                {
+                    // 🔥 ลบรูปเก่าจาก Cloudinary
+                    if (user.Image != null && !string.IsNullOrEmpty(user.Image.PublicId))
                     {
-                        System.IO.File.Delete(oldFilePath);
+                        await _cloudinaryService.DeleteImageAsync(user.Image.PublicId);
+                        await imageRepository.Delete(user.Image.ImageId); // ลบจาก DB
                     }
-                    if (!string.IsNullOrEmpty(user.ImageId)) // Ensure ImageId is not null
+
+                    // 📤 อัปโหลดใหม่
+                    var result = await _cloudinaryService.UploadImageAsync(dto.ProfileImage, "profiles");
+
+                    var image = new Images
                     {
-                        await imageRepository.Delete(user.ImageId); // ลบ record รูปในฐานข้อมูล
+                        ImageId = Guid.NewGuid().ToString(),
+                        PublicId = result.PublicId,
+                        ImageUrl = result.SecureUrl,
+                        FileName = dto.ProfileImage.FileName,
+                        UploadedAt = DateTime.UtcNow
+                    };
+
+                    user.Image = image;
+                }
+
+                await userRepository.Update(user);
+                return Ok(new
+                {
+                    message = "User updated successfully",
+                    user = new
+                    {
+                        user.UserId,
+                        user.Username,
+                        user.Email,
+                        ImageUrl = user.Image?.ImageUrl
                     }
-                }
-
-                // 📸 เพิ่มรูปใหม่
-                var extension = Path.GetExtension(dto.ProfileImage.FileName);
-                var newFilename = $"{dto.Username}_{Guid.NewGuid()}{extension}";
-                var filePath = Path.Combine(uploadFolder, newFilename);
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await dto.ProfileImage.CopyToAsync(stream);
-                }
-                var relativePath = $"/profiles/{newFilename}";
-                var image = new Images
-                {
-                    ImageId = Guid.NewGuid().ToString(),
-                    ProfileImagePath = relativePath,
-                    ProfileImageFileName = dto.ProfileImage.FileName,
-                    ProfileImageUploadedAt = DateTime.UtcNow
-                };
-
-                user.Image = image; // 👈 เชื่อมกับ user
+                });
             }
-
-            await userRepository.Update(user);
-            return Ok(new
+            catch (Exception ex)
             {
-                message = "User updated successfully",
-                user = new
-                {
-                    user.UserId,
-                    user.Username,
-                    user.Email,
-                    ImagePath = user.Image?.ProfileImagePath
-                }
-            });
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Error updating user: {ex.Message}");
+            }
         }
 
 
@@ -240,7 +221,7 @@ namespace HRM_API.Controllers
         }
 
 
-        [Authorize]
+        //[Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(string id)
         {
@@ -250,23 +231,15 @@ namespace HRM_API.Controllers
                 return NotFound("User not found.");
             }
             // เช็ครูปโปรไฟล์แล้วลบ ถ้ามี
-            if (user.Image != null && !string.IsNullOrEmpty(user.Image.ProfileImagePath))
+            if (user.Image != null && !string.IsNullOrEmpty(user.Image.ImageUrl))
             {
-                // ลบไฟล์จากโฟลเดอร์
-                var uploadsFolder = Path.Combine(webHostEnvironment.WebRootPath, "profiles");
-                var imageFilename = Path.GetFileName(user.Image.ProfileImagePath); // ตัด directory ออกให้เหลือแค่ชื่อไฟล์
-                var filePath = Path.GetFullPath(Path.Combine(uploadsFolder, imageFilename));
-
-                // ป้องกัน path traversal
-                if (!filePath.StartsWith(uploadsFolder))
+                // 🔥 ลบรูปเก่าจาก Cloudinary
+                if (user.Image != null && !string.IsNullOrEmpty(user.Image.PublicId))
                 {
-                    return BadRequest("Invalid file path.");
+                    await _cloudinaryService.DeleteImageAsync(user.Image.PublicId);
+                    await imageRepository.Delete(user.Image.ImageId); // ลบจาก DB
                 }
 
-                if (System.IO.File.Exists(filePath))
-                {
-                    System.IO.File.Delete(filePath);
-                }
                 // ลบข้อมูลรูปภาพจากฐานข้อมูล
                 if (!string.IsNullOrEmpty(user.ImageId))
                 {

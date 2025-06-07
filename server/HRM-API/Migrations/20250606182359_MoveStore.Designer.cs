@@ -3,17 +3,17 @@ using System;
 using HRM_API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace HRM_API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250517082739_AddPermissionTable")]
-    partial class AddPermissionTable
+    [Migration("20250606182359_MoveStore")]
+    partial class MoveStore
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -21,176 +21,182 @@ namespace HRM_API.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "9.0.4")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("HRM_API.Model.Document", b =>
                 {
                     b.Property<string>("DocumentId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreateAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("CreatedByUserId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("FilePath")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("FileType")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Filename")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsDelete")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Original_name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
+
+                    b.Property<string>("PublicId")
+                        .HasColumnType("text");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("DocumentId");
 
                     b.HasIndex("CreatedByUserId");
 
-                    b.ToTable("Documents");
+                    b.ToTable("Documents", (string)null);
                 });
 
-            modelBuilder.Entity("HRM_API.Model.Image", b =>
+            modelBuilder.Entity("HRM_API.Model.Images", b =>
                 {
                     b.Property<string>("ImageId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
-                    b.Property<string>("ProfileImageFileName")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("FileName")
+                        .HasColumnType("text");
 
-                    b.Property<string>("ProfileImagePath")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("text");
 
-                    b.Property<DateTime?>("ProfileImageUploadedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("PublicId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UploadedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("ImageId");
 
-                    b.ToTable("Image");
+                    b.ToTable("Images", (string)null);
                 });
 
-            modelBuilder.Entity("HRM_API.Model.Permission", b =>
+            modelBuilder.Entity("HRM_API.Model.Permissions", b =>
                 {
                     b.Property<string>("PermissionId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsDeleteable")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsReadable")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsWriteable")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.HasKey("PermissionId");
 
-                    b.ToTable("Permissions");
+                    b.ToTable("Permissions", (string)null);
                 });
 
             modelBuilder.Entity("HRM_API.Model.Role", b =>
                 {
-                    b.Property<string>("RoldId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("RoleId")
+                        .HasColumnType("text");
 
                     b.Property<string>("PermissionId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
-                    b.Property<string>("Role_name")
+                    b.Property<string>("RoleName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
-                    b.HasKey("RoldId");
+                    b.HasKey("RoleId");
 
                     b.HasIndex("PermissionId")
                         .IsUnique();
 
-                    b.ToTable("Roles");
+                    b.ToTable("Roles", (string)null);
                 });
 
             modelBuilder.Entity("HRM_API.Model.User", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreateAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("First_name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ImageId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Last_name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Password")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Phone")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("RoleId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("UserId");
 
                     b.HasIndex("ImageId")
-                        .IsUnique()
-                        .HasFilter("[ImageId] IS NOT NULL");
+                        .IsUnique();
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("HRM_API.Model.Document", b =>
                 {
                     b.HasOne("HRM_API.Model.User", "CreatedByUser")
                         .WithMany("Documents")
-                        .HasForeignKey("CreatedByUserId");
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("CreatedByUser");
                 });
 
             modelBuilder.Entity("HRM_API.Model.Role", b =>
                 {
-                    b.HasOne("HRM_API.Model.Permission", "Permission")
+                    b.HasOne("HRM_API.Model.Permissions", "Permission")
                         .WithOne("Role")
                         .HasForeignKey("HRM_API.Model.Role", "PermissionId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -201,9 +207,10 @@ namespace HRM_API.Migrations
 
             modelBuilder.Entity("HRM_API.Model.User", b =>
                 {
-                    b.HasOne("HRM_API.Model.Image", "Image")
+                    b.HasOne("HRM_API.Model.Images", "Image")
                         .WithOne("User")
-                        .HasForeignKey("HRM_API.Model.User", "ImageId");
+                        .HasForeignKey("HRM_API.Model.User", "ImageId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("HRM_API.Model.Role", "Role")
                         .WithMany("Users")
@@ -216,12 +223,12 @@ namespace HRM_API.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("HRM_API.Model.Image", b =>
+            modelBuilder.Entity("HRM_API.Model.Images", b =>
                 {
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("HRM_API.Model.Permission", b =>
+            modelBuilder.Entity("HRM_API.Model.Permissions", b =>
                 {
                     b.Navigation("Role");
                 });

@@ -23,6 +23,8 @@ namespace HRM_API.Model
         [Required]
         public string FileType { get; set; } = string.Empty;
 
+        public string? PublicId { get; set; }             // ใช้สำหรับลบไฟล์
+
         [Required]
         public string Status { get; set; } = string.Empty;
 

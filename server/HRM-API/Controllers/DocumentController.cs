@@ -1,6 +1,9 @@
-﻿using System.Security.Claims;
+﻿using System.Net;
+using System.Security.Claims;
+using CloudinaryDotNet;
 using HRM_API.Model;
 using HRM_API.Repository;
+using HRM_API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -14,11 +17,13 @@ namespace HRM_API.Controllers
     {
         private readonly DocumentRepository doc;
         private readonly IWebHostEnvironment webHostEnvironment;
+        private readonly CloudinaryService _cloudinaryService;
 
-        public DocumentController(DocumentRepository documentRepository ,IWebHostEnvironment webHostEnvironment)
+        public DocumentController(DocumentRepository documentRepository ,IWebHostEnvironment webHostEnvironment, CloudinaryService cloudinaryService)
         {
             this.doc = documentRepository;
             this.webHostEnvironment = webHostEnvironment;
+            this._cloudinaryService = cloudinaryService;
         }
         [HttpGet]
         public async Task<ActionResult> DocumentList()
@@ -40,9 +45,12 @@ namespace HRM_API.Controllers
 
         [Authorize]
         [HttpPost("upload")]
-        public async Task<IActionResult> UploadFile(IFormFile file, [FromForm] string filename, [FromForm] string description, [FromForm] string status)
+        public async Task<IActionResult> UploadFile(
+            IFormFile file,
+            [FromForm] string filename,
+            [FromForm] string description,
+            [FromForm] string status)
         {
-            // ดึง userId จาก Claims ใน token
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
                 return Unauthorized("Token does not contain user ID");
@@ -52,36 +60,32 @@ namespace HRM_API.Controllers
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded.");
 
-            // ✅ ใช้ชื่อไฟล์ที่ผู้ใช้กรอกมา แล้วเพิ่มนามสกุลตามไฟล์จริง
-            var extension = Path.GetExtension(file.FileName); // เช่น .pdf
-            var sanitizedFilename = Path.GetFileNameWithoutExtension(filename); // กัน user ส่งชื่อแปลก ๆ
+            var uploadResult = await _cloudinaryService.UploadFileUniqueAsync(file, "documents");
+
+            var extension = Path.GetExtension(file.FileName);
+            var sanitizedFilename = Path.GetFileNameWithoutExtension(filename);
             var newFilename = sanitizedFilename + extension;
-
-            var uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
-            Directory.CreateDirectory(uploadFolder);
-            var filePath = Path.Combine(uploadFolder, newFilename);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
-
-            var relativePath = $"uploads/{newFilename}";
 
             var document = new Document
             {
                 Filename = newFilename,
                 Original_name = file.FileName,
-                FilePath = relativePath,
+                FilePath = uploadResult.SecureUrl,
                 FileType = file.ContentType,
                 Description = description,
                 Status = status,
                 CreateAt = DateTime.UtcNow,
-                CreatedByUserId = userId // ✅ อาจรับจาก token แทน hardcode
+                CreatedByUserId = userId,
+                PublicId = uploadResult.PublicId
             };
 
             await doc.Add(document);
-            return Ok(new { message = "Uploaded successfully", path = relativePath });
+
+            return Ok(new
+            {
+                message = "Uploaded successfully",
+                url = uploadResult.SecureUrl
+            });
         }
 
         [Authorize]
@@ -149,25 +153,15 @@ namespace HRM_API.Controllers
             //    return Forbid("You are not authorized to delete this document.");
             //}
 
-            // กำหนด path ที่ปลอดภัย
-            var uploadsFolder = Path.Combine(webHostEnvironment.WebRootPath, "uploads");
-            var filePath = Path.GetFullPath(Path.Combine(uploadsFolder, document.Filename));
-
-            // ป้องกัน Path Traversal
-            if (!filePath.StartsWith(uploadsFolder))
-            {
-                return BadRequest("Invalid file path.");
-            }
-
             try
             {
-                // ลบไฟล์หากมี
-                if (System.IO.File.Exists(filePath))
-                {
-                    System.IO.File.Delete(filePath);
-                }
+                // ✅ ดึง publicId 
+                var cloudinaryPublicId = document.PublicId!;
 
-                // ลบข้อมูลในฐานข้อมูล
+                // ✅ ลบไฟล์จาก Cloudinary
+                await _cloudinaryService.DeleteFileAsync(cloudinaryPublicId);
+
+                // ✅ ลบข้อมูลจากฐานข้อมูล
                 await doc.Delete(id);
 
                 return Ok(new
@@ -189,31 +183,25 @@ namespace HRM_API.Controllers
         {
             var document = await doc.GetById(id);
             if (document == null)
-            {
                 return NotFound("Document not found");
-            }
 
-            var uploadsFolder = Path.Combine(webHostEnvironment.WebRootPath, "uploads");
-            var filePath = Path.GetFullPath(Path.Combine(uploadsFolder, document.Filename));
+            var fileUrl = document.FilePath;
+            Console.WriteLine(fileUrl);
+            using var httpClient = new HttpClient();
+            var response = await httpClient.GetAsync(fileUrl);
 
-            if (!filePath.StartsWith(uploadsFolder))
-            {
-                return BadRequest("Invalid file path");
-            }
+            Console.WriteLine(response);
+            if (!response.IsSuccessStatusCode)
+                return NotFound("File not found on Cloudinary");
 
-            if (!System.IO.File.Exists(filePath))
-            {
-                return NotFound("File not found on server");
-            }
-
+            var stream = await response.Content.ReadAsStreamAsync();
             var memory = new MemoryStream();
-            using (var stream = new FileStream(filePath, FileMode.Open))
-            {
-                await stream.CopyToAsync(memory);
-            }
+            await stream.CopyToAsync(memory);
             memory.Position = 0;
 
-            return File(memory, document.FileType, document.Original_name);
+            // ✅ ต้องระบุ Content-Type และชื่อไฟล์
+            return File(memory, "application/pdf", document.Original_name);
         }
+
     }
 }

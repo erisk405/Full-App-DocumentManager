@@ -2,6 +2,7 @@
 using HRM_API.Data;
 using HRM_API.Model;
 using HRM_API.Repository;
+using HRM_API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -14,7 +15,7 @@ builder.Services.AddCors(option =>
 {
     option.AddPolicy("AllowAngularDev", policy =>
     {
-        policy.WithOrigins("http://localhost:4200")// อนุญาตแค่ Angular dev
+        policy.WithOrigins("http://localhost:4200", "https://document-manager-bay.vercel.app")// อนุญาตแค่ Angular dev
         .AllowAnyMethod()
         .AllowAnyHeader();
 
@@ -41,12 +42,29 @@ builder.Services.AddAuthentication("Bearer")
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
+var dbProvider = builder.Configuration.GetValue<string>("DatabaseProvider");
+
 // Add services to the container.
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetSection("ConnectionStrings")["DefaultConnection"]);
-}); 
+    if (dbProvider == "Postgres")
+    {
+        var connStr = builder.Configuration.GetConnectionString("PostgresConnection");
+        options.UseNpgsql(connStr);
+    }
+    else if (dbProvider == "SqlServer")
+    {
+        var connStr = builder.Configuration.GetConnectionString("SqlServerConnection");
+        options.UseSqlServer(connStr);
+    }
+    else
+    {
+        throw new Exception("Unknown database provider");
+    }
+});
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
+
+Console.WriteLine($"[INFO] Using DB Provider: {dbProvider}");
 
 
 // Register IHttpContextAccessor
@@ -55,6 +73,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSingleton<CloudinaryService>();
 
 builder.Services.AddScoped<DocumentRepository>();
 builder.Services.AddScoped<UserRepository>();

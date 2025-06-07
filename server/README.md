@@ -23,9 +23,6 @@
 
 - 📄 **Document Management**
   - Document upload/download
-  - File metadata management
-  - Secure storage
-  - Access control
 
 ## 🗂️ ER Diagram
 
@@ -76,8 +73,9 @@
    ```json
    {
      "ConnectionStrings": {
-       "DefaultConnection": "Server=your-server;Database=HRM;Trusted_Connection=True;TrustServerCertificate=True;"
-     }
+        "PostgresConnection": "Host=localhost;Port=5432;Database=YouDB;Username=postgres;Password=yourPassword",
+        "SqlServerConnection": "Server=localhost\\SQLEXPRESS;Database=DB-HRM;Trusted_Connection=True;TrustServerCertificate=True;"
+     },
    }
    ```
 
@@ -86,16 +84,21 @@
    dotnet ef database update
    ```
 
-4. **Configure JWT Settings**
-   - Update JWT settings in `appsettings.json`:
+4. **Configure JWT Settings & Cloudinary**
+   - Update JWT settings & Cloudinary in `appsettings.json`:
    ```json
    {
-     "JwtSettings": {
-       "Key": "your-secret-key",
-       "Issuer": "your-issuer",
-       "Audience": "your-audience",
-       "ExpireMinutes": 60
-     }
+       "JwtSettings": {
+         "Key": "your-secret-key",
+         "Issuer": "your-issuer",
+         "Audience": "your-audience",
+         "ExpireMinutes": 60
+       },
+        "Cloudinary": {
+         "CloudName": "YourCloudName",
+         "ApiKey": "Apikey",
+         "ApiSecret": "Your secret"
+       }
    }
    ```
 

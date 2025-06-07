@@ -6,7 +6,11 @@
   <div class="flex items-center gap-6">
     <i class="pi pi-bell"></i>
     <div class="border-l h-10 border-zinc-400"></div>
-    <div class="flex items-center gap-3 cursor-pointer" (click)="menu.toggle($event)">
+    <div
+      #menuToggle
+      class="flex items-center gap-3 cursor-pointer"
+      (click)="menu.toggle($event)"
+    >
       <p-avatar
         [label]="
           !currentUser.profileImageUrl
@@ -26,21 +30,22 @@
     </div>
   </div>
 </div>
+
 <p-menu
   #menu
   [model]="items"
   [popup]="true"
-  class="flex justify-center"
-  styleClass="w-full md:w-50"
+  class="flex justify-end"
+  styleClass="w-full md:w-40"
+  appendTo="#menuToggle"
 >
-  <ng-template #start>
-    <span class="inline-flex items-center gap-3 px-2 py-2">
-      <img src="/light-logo.png" alt="" class="w-6" />
-      <span class="text-xl font-semibold">Document</span>
-    </span>
-  </ng-template>
   <ng-template #item let-item>
-    <a pRipple class="flex items-center p-menu-item-link" [routerLink]="item.routerLink" (click)="item.command && item.command()">
+    <a
+      pRipple
+      class="flex items-center p-menu-item-link"
+      [routerLink]="item.routerLink"
+      (click)="item.command && item.command()"
+    >
       <span [class]="item.icon"></span>
       <span class="ml-2">{{ item.label }}</span>
     </a>

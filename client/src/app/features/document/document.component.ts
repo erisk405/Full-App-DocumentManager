@@ -219,6 +219,30 @@ export class DocumentComponent {
     }
 
   }
+  onFileSelect(event: any) {
+    console.log('File selected:', event.files);
+    // ตรวจสอบว่าไฟล์ถูกเลือกแล้ว
+    if (event.files && event.files.length > 0) {
+      const file = event.files[0];
+      console.log('Selected file:', file.name, 'Size:', file.size);
+      if (file.size > 3000000) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'File Size Error',
+          detail: 'File size must be less than 3MB'
+        });
+      }
+    }
+  }
+
+  onFileError(event: any) {
+    console.log('File error:', event);
+    this.messageService.add({
+      severity: 'error',
+      summary: 'File Error',
+      detail: 'File selection failed. Please check file size and type.'
+    });
+  }
 
   downloadDocument() {
     if (!this.selectedDocument) {

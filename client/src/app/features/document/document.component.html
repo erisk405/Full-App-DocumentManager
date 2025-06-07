@@ -1,4 +1,4 @@
-<div>
+<div class="w-full">
   <!-- Single confirmation dialog for the entire component -->
   <p-confirmdialog #cd>
     <ng-template
@@ -241,27 +241,32 @@
               </div>
             </div>
             <!-- upload file -->
-            <div class="col-span-5 flex justify-between items-center">
-              <div class="flex gap-6">
-                <p-fileupload
-                  #fu
-                  name="file"
-                  mode="basic"
-                  [customUpload]="true"
-                  (uploadHandler)="myUploadHandler($event)"
-                  chooseLabel="Choose"
-                  chooseIcon="pi pi-upload"
-                  accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                  maxFileSize="1000000"
+            <div class="col-span-5 flex flex-col gap-1">
+              <div class="col-span-5 flex justify-between items-center">
+                <div class="flex flex-col">
+                  <p-fileupload
+                    #fu
+                    name="file"
+                    mode="basic"
+                    [customUpload]="true"
+                    (uploadHandler)="myUploadHandler($event)"
+                    (onSelect)="onFileSelect($event)"
+                    (onError)="onFileError($event)"
+                    chooseLabel="Choose"
+                    chooseIcon="pi pi-upload"
+                    accept="image/*,application/pdf"
+                    maxFileSize="3000000"
+                  />
+                </div>
+                <p-button
+                  label="Upload"
+                  (onClick)="fu.upload()"
+                  severity="secondary"
+                  [loading]="loading"
+                  [disabled]="loading"
                 />
               </div>
-              <p-button
-                label="Upload"
-                (onClick)="fu.upload()"
-                severity="secondary"
-                [loading]="loading"
-                [disabled]="loading"
-              />
+              <p class="text-red-500">* File size must be less than 3MB</p>
             </div>
           </form>
         </div>
@@ -277,7 +282,7 @@
       [value]="document"
       [paginator]="true"
       [rows]="10"
-      [tableStyle]="{ 'min-width': '60rem' }"
+      [tableStyle]="{ 'min-width': '20rem' }"
       [rowsPerPageOptions]="[10, 20, 30]"
       [globalFilterFields]="['filename', 'description', 'status']"
     >

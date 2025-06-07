@@ -32,33 +32,25 @@ export class HeaderComponent {
     );
     this.items = [
       {
-        separator: true
+        label: 'Dashboard',
+        icon: 'pi pi-objects-column',
+        routerLink: '/dashboard'
       },
       {
-        label: 'Profile',
-        items: [
-          {
-            label: 'Dashboard',
-            icon: 'pi pi-objects-column',
-            routerLink: '/dashboard'
-          },
-          {
-            label: 'Document',
-            icon: 'pi pi-file-o',
-            routerLink: '/document'
-          },
-          {
-            label: 'Objectives',
-            icon: 'pi pi-chart-bar',
-            routerLink: '/objectives'
-          },
-          {
-            label: 'Logout',
-            icon: 'pi pi-sign-out',
-            command: () => this.logout()
-          }
-        ]
+        label: 'Document',
+        icon: 'pi pi-file-o',
+        routerLink: '/document'
       },
+      {
+        label: 'Objectives',
+        icon: 'pi pi-chart-bar',
+        routerLink: '/objectives'
+      },
+      {
+        label: 'Logout',
+        icon: 'pi pi-sign-out',
+        command: () => this.logout()
+      }
     ];
   }
 

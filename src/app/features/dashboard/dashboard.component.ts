@@ -747,8 +747,10 @@ export class DashboardComponent {
   }
 
   saveUserEdit(): void {
+    this.isUpdateLoading = true;
     if (!this.editUserForm.valid) {
       this.editUserForm.markAllAsTouched();
+      this.isUpdateLoading = false;
       return;
     }
     console.log(this.editUserForm.value);
@@ -760,7 +762,9 @@ export class DashboardComponent {
       next: (response) => {
         console.log('User updated successfully:', response);
         // รีโหลดข้อมูลใหม่เพื่อให้แน่ใจว่าข้อมูลที่แสดงเป็นข้อมูลล่าสุด
+        this.isUpdateLoading = false;
         this.loadUserData();
+        
       },
       error: (error) => {
         console.error('Error updating user:', error);
@@ -768,6 +772,7 @@ export class DashboardComponent {
       },
       complete: () => {
         this.visibleEditUser = false;
+        this.isUpdateLoading = false;
         this.selectedUser = null;
       }
     });
@@ -813,8 +818,8 @@ export class DashboardComponent {
   }
 
   onUserPasswordChangeSubmit() {
-    const formData = new FormData();
     this.isUpdateLoading = true;
+    const formData = new FormData();
     if (!this.selectedUser?.userId) {
       return this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to change password' });
     }

@@ -1,4 +1,4 @@
-<div class="">
+<div class="w-full">
   <!-- Single confirmation dialog for the entire component -->
   <p-confirmdialog #cd>
     <ng-template
@@ -489,7 +489,7 @@
       [paginator]="true"
       [rows]="rows"
       [totalRecords]="totalRecords"
-      [tableStyle]="{ 'min-width': '50rem' }"
+      [tableStyle]="{ 'min-width': '20rem' }"
       [rowsPerPageOptions]="[5, 10, 20]"
       [globalFilterFields]="['name', 'email', 'role', 'create']"
       styleClass=""
@@ -516,7 +516,7 @@
                     : undefined
                 "
                 [image]="user.profileImageUrl"
-                class="flex items-center justify-center mr-2 "
+                class="flex items-center justify-center mr-2"
                 shape="circle"
               />
               <div>
@@ -577,19 +577,7 @@
 >
   <ng-template pTemplate="header">
     <div class="inline-flex items-center justify-center gap-2">
-      <p-avatar
-        [label]="
-          !selectedUser?.profileImageUrl
-            ? (selectedUser?.first_name?.charAt(0) || '') +
-              (selectedUser?.last_name?.charAt(0) || '')
-            : undefined
-        "
-        [image]="selectedUser?.profileImageUrl"
-        shape="circle"
-      />
-      <span class="font-bold whitespace-nowrap">{{
-        selectedUser?.first_name + " " + selectedUser?.last_name
-      }}</span>
+      <h2 class="text-2xl">User Information📑</h2>
     </div>
   </ng-template>
   <form id="editUserForm" [formGroup]="editUserForm">
@@ -828,7 +816,7 @@
     </div>
   </form>
 
-  <ng-template pTemplate="footer">
+  <div class="flex items-center justify-end gap-3 my-3">
     <p-button
       label="Cancel"
       [text]="true"
@@ -836,19 +824,20 @@
       (click)="visibleEditUser = false"
     />
     <p-button
-      label="Save password change"
+      (click)="onUserPasswordChangeSubmit()"
+      type="submit"
       [label]="isUpdateLoading ? 'Sending...' : 'Save password change'"
       [icon]="isUpdateLoading ? 'pi pi-spinner animate-spin' : undefined"
-      type="submit"
       [disabled]="changePasswordForm.invalid || isUpdateLoading"
-      (click)="onUserPasswordChangeSubmit()"
+      form="changePasswordForm"
     />
     <p-button
+      (click)="saveUserEdit()"
       type="submit"
-      label="Save"
       [label]="isUpdateLoading ? 'Sending...' : 'Save Information'"
       [icon]="isUpdateLoading ? 'pi pi-spinner animate-spin' : undefined"
-      (click)="saveUserEdit()"
+      [disabled]="editUserForm.invalid || isUpdateLoading"
+      form="editUserForm"
     />
-  </ng-template>
+  </div>
 </p-dialog>

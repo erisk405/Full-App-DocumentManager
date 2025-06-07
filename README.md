@@ -12,7 +12,6 @@
 
 - 🔐 **Authentication & Authorization**
   - JWT-based authentication
-  - Role-based access control
   - Permission management
 
 - 👥 **User Management**
@@ -23,11 +22,13 @@
 
 - 📄 **Document Management**
   - Document upload/download
+  - Update Document Information
+  - Delete Document
 
 ## 🗂️ ER Diagram
 
 <div align="center">
-  <img src="https://res.cloudinary.com/dgfwfpxvg/image/upload/v1748796572/ER-diagram_ewm29g.png">
+  <img src="https://res.cloudinary.com/dgfwfpxvg/image/upload/v1749278509/k876pspwni4t4ufzr0dh.png">
 </div>
 
 ## 🔄 Data Flow
@@ -43,8 +44,8 @@
 
 2. **📁 Document Management Flow**
    ```
-   Upload: Client → Validate Token → Save File → Store Metadata → Return Success
-   Download: Client → Validate Token → Check Permissions → Serve File
+   Upload: Client → Validate Token → Save File → Store Cloudinary → Return Success
+   Download: Client → Validate Token → Serve File
    ```
 
 3. **👤 User Management Flow**

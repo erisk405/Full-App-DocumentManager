@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ViewChild } from '@angular/core';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
@@ -13,7 +13,7 @@ import { DocumentService } from './document.service';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
-import { FileUploadModule } from 'primeng/fileupload';
+import { FileUploadModule, FileUpload } from 'primeng/fileupload';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { TextareaModule } from 'primeng/textarea';
@@ -56,6 +56,7 @@ import { User } from '../../model/user.type';
   styleUrl: './document.component.css',
 })
 export class DocumentComponent {
+  @ViewChild('fu') fileUpload!: FileUpload;
   // ตัวแปรสำหรับเก็บ subscription เพื่อ unsubscribe เมื่อ component ถูกทำลาย
   private userSubscription?: Subscription;
   private authService = inject(AuthService);
@@ -95,7 +96,7 @@ export class DocumentComponent {
         Validators.minLength(3),
         Validators.maxLength(100)
       ]),
-      selectedStatus: new FormControl(null, Validators.required),
+      selectedStatus: new FormControl(this.docStatus[1], Validators.required),
       description: new FormControl('', [
         Validators.required,
         Validators.minLength(10),
@@ -127,7 +128,6 @@ export class DocumentComponent {
 
   showEditDocumentDialog(doc: DocumentProp): void {
     this.visibleEditDocument = true;
-    console.log("doc", doc);
     this.selectedDocument = doc;
     const status = this.docStatus.findIndex((item) => item.value === doc.status);
     this.updateDocument.setValue({
@@ -183,6 +183,8 @@ export class DocumentComponent {
         next: () => {
           this.messageService.add({ severity: 'success', summary: 'Success', detail: 'File uploaded successfully' });
           this.visible = false;
+          this.formGroup.reset();
+          this.fileUpload.clear();
           this.loadDocument();
           this.loading = false;
         },
